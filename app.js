@@ -113,14 +113,13 @@
     var next = recommend(uid);
     if (next) el.appendChild(h('a.btn.primary.next-up', { href: next.href }, '▶ Next: ' + next.label));
     var flow = h('ol.flow');
-    flow.appendChild(step(1, 'Briefing', 'The one core idea, in 90 seconds.', '#/u/' + uid + '/briefing', S.unitFlag(uid, 'briefing')));
+    flow.appendChild(step(1, 'Briefing', null, '#/u/' + uid + '/briefing', S.unitFlag(uid, 'briefing')));
     var gamesLi = h('li.flow-step');
     gamesLi.appendChild(h('h2', null, h('span.num', null, '2'), ' Mini-games'));
     var grid = h('div.games');
     d.games.forEach(function (g) {
-      var card = h('section.game-card', { 'aria-labelledby': 'g-' + g.id });
+      var card = h('section.game-card', { 'aria-labelledby': 'g-' + g.id, title: g.blurb });
       card.appendChild(h('h3', { id: 'g-' + g.id }, h('span', { 'aria-hidden': 'true' }, g.icon + ' '), g.title, h('span.verb', null, g.verb)));
-      card.appendChild(h('p', null, g.blurb));
       var ul = h('ul.levels');
       g.levels.forEach(function (l) {
         var rec = S.level(levelKey(uid, g.id, l.id));
@@ -131,13 +130,13 @@
     });
     gamesLi.appendChild(grid);
     flow.appendChild(gamesLi);
-    flow.appendChild(step(3, 'Trace the Code', 'Read and trace the lecture\'s Lisp: predict, fill the blank, spot the bug.', '#/u/' + uid + '/trace', S.unitFlag(uid, 'trace')));
-    flow.appendChild(step(4, 'Boss', 'Eight mixed questions, one hands-on task, one flashback.', '#/u/' + uid + '/boss', S.unitFlag(uid, 'boss')));
-    flow.appendChild(step(5, 'Summary', 'What you can now explain + concept cards.', '#/u/' + uid + '/summary', S.unitFlag(uid, 'summary')));
+    flow.appendChild(step(3, 'Trace the Code', null, '#/u/' + uid + '/trace', S.unitFlag(uid, 'trace')));
+    flow.appendChild(step(4, 'Boss', null, '#/u/' + uid + '/boss', S.unitFlag(uid, 'boss')));
+    flow.appendChild(step(5, 'Summary', null, '#/u/' + uid + '/summary', S.unitFlag(uid, 'summary')));
     el.appendChild(flow);
   }
   function step(n, title, text, href, done) {
-    return h('li.flow-step', null, h('h2', null, h('span.num', null, String(n)), ' ', h('a', { href: href }, title), done ? h('span.done', { 'aria-label': 'done' }, ' ✓') : null), h('p', null, text));
+    return h('li.flow-step', null, h('h2', null, h('span.num', null, String(n)), ' ', h('a', { href: href }, title), done ? h('span.done', { 'aria-label': 'done' }, ' ✓') : null), text ? h('p', null, text) : null);
   }
   /* No dead ends: always know the next thing to do. */
   function recommend(uid) {

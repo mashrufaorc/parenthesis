@@ -81,7 +81,7 @@
     rotWhy: { LT: '{x} is {p}\'s **left** child: LT-Rot. {x} becomes the parent; {p} becomes {x}\'s right child.', RT: '{x} is {p}\'s **right** child: RT-Rot. {x} becomes the parent; {p} becomes {x}\'s left child.' },
     movedQ: 'Which subtree switches parents (from {x} to {p})?',
     movedWhy: { some: 'T2: {x}\'s old {side} subtree, rooted at {m}, becomes {p}\'s new {pside} child. T1 and T3 don\'t move.', none: '{x}\'s old {side} subtree is empty, so nothing switches parents.' },
-    splayPrompt: '{k} is at depth {d}. Its parent is {p}. Which rotation comes next?',
+    splayPrompt: 'Lift **{k}** over **{p}**: which rotation?',
     splayDone: '{k} is the root. {n} rotations, one per ancestor on the chain ({chain}).',
     accessQ: 'Search 20 times, mostly for the same three keys. Which tree does fewer comparisons in total?'
   };

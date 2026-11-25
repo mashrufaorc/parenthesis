@@ -3,6 +3,22 @@
 A browser game that teaches data structures by letting you *play* each algorithm.
 Unofficial study aid based on data structures lecture materials.
 
+![The map: fifteen lab rooms, one per unit](docs/screenshots/map.jpg)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/bst.jpg" alt="BST Builder: choosing left or right while inserting 45, with the wrong turn explained"><br><sub><b>Build a BST</b>: pick left or right at each node. A wrong turn says why.</sub></td>
+    <td width="50%"><img src="docs/screenshots/heap.jpg" alt="Sink Down: a max heap shown as a tree and as its array, sinking 8 from the root"><br><sub><b>Pop a heap</b>: the same heap as a tree and as its array; tap the child to swap with.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/sort-race.jpg" alt="Selection sort and insertion sort side by side on the same input, with live comparison counters and the lecture Lisp highlighted"><br><sub><b>Watch two sorts race</b>: same input, live counters, the running Lisp line highlighted.</sub></td>
+    <td><img src="docs/screenshots/trace.jpg" alt="Trace the Code: predict what (heapsort (vector 9 6 10 7 8) #'>) returns; a wrong pick is explained"><br><sub><b>Trace the Code</b>: predict what the lecture's Lisp returns. Every answer is checked in SBCL.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/room.jpg" alt="A unit room: Briefing, three mini-games with their levels and stars, Trace the Code, Boss, Summary" width="60%"><br><sub><b>Each room</b>: a short briefing, mini-games (Watch, Try, Solo), Trace the Code, a Boss, and a summary.</sub></td>
+  </tr>
+</table>
+
 ## Play
 
 Open `index.html` in any modern browser. No server, no build step, no network: it works offline from disk.

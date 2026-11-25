@@ -343,7 +343,7 @@
   function rotate(el, ctx) {
     var count = ctx.level.count, i = 0, misses = 0, r = E.rng(ctx.seed);
     var area = h('div'); el.appendChild(area);
-    U.codePanel(el, { code: ctx.unit.lisp.rotate.code, title: ctx.unit.lisp.rotate.title });
+    U.codePanel(el, { code: ctx.unit.lisp.rotate.code, title: ctx.unit.lisp.rotate.title, collapsed: true });
     function next() {
       U.clear(area);
       if (i >= count) { CQ.store.noteRound(ctx.gameId, misses === 0); return G.continueBtn(area, 'Finish level', function () { ctx.complete({ stars: G.stars(0, misses === 0), summary: count + ' rotations, ' + misses + ' slip(s).' }); }); }
@@ -417,12 +417,11 @@
   };
   function splay(el, ctx) {
     var L0 = ctx.level, rt = B.build(ctx.unit.trees[L0.tree]);
-    el.appendChild(h('p.small', null, 'Searches, in order: ' + L0.keys.join(', ') + '. Each one starts from the tree the last one left.'));
     G.splayTask(el, { unit: ctx.unit, root: rt, keys: L0.keys, hints: ctx.hints, gameId: ctx.gameId, onDone: function (r) {
       CQ.store.noteRound(ctx.gameId, r.misses === 0);
       G.continueBtn(el, 'Finish level', function () { ctx.complete({ stars: G.stars(r.hints, r.misses === 0), summary: L0.keys.length + ' keys splayed, ' + r.misses + ' wrong rotation(s).' }); });
     } });
-    U.codePanel(el, { code: ctx.unit.lisp.splay.code, title: ctx.unit.lisp.splay.title });
+    U.codePanel(el, { code: ctx.unit.lisp.splay.code, title: ctx.unit.lisp.splay.title, collapsed: true });
   }
 
   /* ---------- Hot Keys: plain BST vs splay tree on the same searches ---------- */

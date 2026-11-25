@@ -164,9 +164,8 @@
   function push(el, ctx) {
     var L0 = ctx.level, comp = cmpOf(L0.comp), r = E.rng(ctx.seed), count = L0.count, k = 0, misses = 0, hints = 0;
     var vec = randHeap(7, ctx.seed, comp), used = {}; vec.forEach(function (v) { used[v] = 1; });
-    el.appendChild(h('p.small', null, L0.comp === 'min' ? 'A min heap: (heap-push x vec #\'<). Every parent is ≤ its children; the minimum is at index 0.' : 'A max heap: (heap-push x vec #\'>). Every parent is ≥ its children.'));
     var area = h('div'); el.appendChild(area);
-    U.codePanel(el, { code: ctx.unit.lisp.up.code, title: ctx.unit.lisp.up.title });
+    U.codePanel(el, { code: ctx.unit.lisp.up.code, title: ctx.unit.lisp.up.title, collapsed: true });
     function next() {
       U.clear(area);
       if (k >= count) { CQ.store.noteRound(ctx.gameId, misses === 0); return G.continueBtn(area, 'Finish level', function () { ctx.complete({ stars: G.stars(hints, misses === 0), summary: count + ' pushes, ' + misses + ' slip(s).' }); }); }
@@ -184,9 +183,8 @@
     var T = opts.unit.templates, comp = cmpOf(opts.comp), res = HP.pop(opts.vec, comp), si = 0, misses = 0, hints = 0, bad = null;
     var cur = res.afterSwap.slice(), last = opts.vec.length - 1;
     var p = h('p.q-prompt', { 'aria-live': 'polite' }); el.appendChild(p);
-    p.appendChild(U.rich('HEAP-POP: swap the root **' + opts.vec[0] + '** with the last item **' + opts.vec[last] + '**, VECTOR-POP the old root off the end, then sink ' + opts.vec[last] + '.'));
+    p.appendChild(U.rich('Pop **' + opts.vec[0] + '**: the last item, **' + opts.vec[last] + '**, moves to the root and sinks.'));
     var hv = G.heapView(el, { onPick: pick, selectable: function (i) { var s = res.steps[si]; return s && !s.leaf && (i === s.l || i === s.r); } });
-    var popped = h('p.status', null, 'Popped: ' + res.value + ' (PROG1 returns it after HEAP-DOWN runs)'); el.appendChild(popped);
     var q = h('p.q-prompt', { 'aria-live': 'polite' }); el.appendChild(q);
     var row = h('div.choice-row'); el.appendChild(row);
     var tools = h('div.tools'); el.appendChild(tools);
@@ -230,7 +228,7 @@
     function finish(leaf) {
       U.clear(row); U.clear(tools);
       var st = { state: {}, badge: {} }; st.state[res.final] = 'ok'; hv.render(cur, st);
-      q.textContent = (leaf ? 'It reached a leaf (no children): stop. ' : '') + 'Heap restored: #(' + cur.join(' ') + '). ' + res.comparisons + ' comparison(s), at most 2h.';
+      q.textContent = 'Popped ' + res.value + '. ' + (leaf ? 'It reached a leaf: stop. ' : '') + 'Heap restored: #(' + cur.join(' ') + '). ' + res.comparisons + ' comparison(s), at most 2h.';
       opts.onDone({ misses: misses, hints: hints, vec: cur, value: res.value });
     }
     ask();
@@ -239,7 +237,7 @@
     var L0 = ctx.level, comp = cmpOf(L0.comp), count = L0.count, k = 0, misses = 0, hints = 0, out = [];
     var vec = randHeap(11, ctx.seed, comp);
     var area = h('div'); el.appendChild(area);
-    U.codePanel(el, { code: ctx.unit.lisp.down.code, title: ctx.unit.lisp.down.title });
+    U.codePanel(el, { code: ctx.unit.lisp.down.code, title: ctx.unit.lisp.down.title, collapsed: true });
     function next() {
       U.clear(area);
       if (k >= count || vec.length < 2) { CQ.store.noteRound(ctx.gameId, misses === 0); area.appendChild(h('p.status', null, 'Popped in order: ' + out.join(', ') + '. Repeated pops come out sorted: that is heapsort\'s idea.')); return G.continueBtn(area, 'Finish level', function () { ctx.complete({ stars: G.stars(hints, misses === 0), summary: count + ' pops, ' + misses + ' slip(s).' }); }); }

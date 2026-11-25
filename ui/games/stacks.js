@@ -119,7 +119,7 @@
     var cnt = U.counters(el, ['shifts']);
     el.appendChild(h('h3', null, 'Same operations on a plain array queue'));
     var plain = h('p.plainq', { 'aria-live': 'polite' }); el.appendChild(plain);
-    U.codePanel(el, { code: ctx.unit.lisp.ring.code, title: ctx.unit.lisp.ring.title });
+    U.codePanel(el, { code: ctx.unit.lisp.ring.code, title: ctx.unit.lisp.ring.title, collapsed: true });
     var tools = h('div.tools'); el.appendChild(tools);
     var fb = U.feedback(el);
     if (ctx.hints) tools.appendChild(U.button('Why?', function () { hints++; var o = ops[k]; fb.show({ info: true, title: 'Where to look', why: o.op === 'enqueue' ? 'ENQUEUE writes at tail (slot ' + q.tail + ').' : 'DEQUEUE reads at head (slot ' + q.head + ').' }); }));

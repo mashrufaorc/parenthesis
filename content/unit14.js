@@ -80,9 +80,9 @@
   ];
 
   var templates = {
-    pushPrompt: 'Push **{x}**. It is at index {i} ({v}); its parent is index {p} ({pv}). Swap or stop?',
+    pushPrompt: '**{v}** vs its parent **{pv}**: swap or stop?',
     pushWhy: { swap: '{v} {rel} {pv}: it wins COMP against its parent, so swap and keep swimming.', stop: '{v} does not beat {pv}: stop. The heap property holds.', root: 'It reached index 0, the root: stop.' },
-    popPrompt: 'Sinking {v} at index {i}. Tap the child to swap with, or press Stop.',
+    popPrompt: 'Sink **{v}**: tap the child to swap with, or Stop.',
     popWhy: 'HEAP-DOWN compares the two children and picks the winner ({c} at index {ci}); it swaps only if that child beats {v}.',
     indexQ: { parent: 'Tap the **parent** of index {i}.', left: 'Tap the **left child** of index {i}.', right: 'Tap the **right child** of index {i}.' },
     indexWhy: { parent: 'parent(i) = floor((i − 1) / 2) = floor(({i} − 1) / 2) = {a}.', left: 'left(i) = 2i + 1 = {a}.', right: 'right(i) = 2i + 2 = {a}.' }

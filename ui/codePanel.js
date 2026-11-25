@@ -8,15 +8,27 @@
   var h = U.h;
 
   /* Light syntax tint: comments, strings, keywords, parens. Escapes first. */
+  function escape(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  /* Index of the ; that starts a comment (not one inside a "string"), or -1.
+   * Found on the raw line: escaping first would turn < into &lt; and its ; into a fake comment. */
+  function commentAt(line) {
+    var inStr = false;
+    for (var i = 0; i < line.length; i++) {
+      var c = line[i];
+      if (c === '\\' && inStr) { i++; continue; }
+      if (c === '"') inStr = !inStr;
+      else if (c === ';' && !inStr) return i;
+    }
+    return -1;
+  }
   function tint(line) {
-    var esc = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    var ci = esc.indexOf(';');
-    var comment = '';
-    if (ci >= 0) { comment = '<span class="tk-c">' + esc.slice(ci) + '</span>'; esc = esc.slice(0, ci); }
+    var ci = commentAt(line);
+    var esc = escape(ci >= 0 ? line.slice(0, ci) : line);
+    var comment = ci >= 0 ? '<span class="tk-c">' + escape(line.slice(ci)) + '</span>' : '';
     esc = esc.replace(/\b(defun|dotimes|do|let|if|cond|when|return|setf|rotatef|funcall|aref|length|floor|defvar|make-array|t|nil|minusp|1\+|1-)\b/gi,
       '<span class="tk-k">$1</span>');
     esc = esc.replace(/([()])/g, '<span class="tk-p">$1</span>');
-    esc = esc.replace(/(#'[<>=])/g, '<span class="tk-s">$1</span>');
+    esc = esc.replace(/(#'(?:&lt;|&gt;|=))/g, '<span class="tk-s">$1</span>');
     return esc + comment;
   }
 
@@ -24,7 +36,7 @@
     opts = opts || {};
     var lines = String(opts.code || '').replace(/\n$/, '').split('\n');
     var wrap = h('figure.code-panel');
-    if (opts.title) wrap.appendChild(h('figcaption', null, opts.title));
+    if (opts.title && !opts.collapsed) wrap.appendChild(h('figcaption', null, opts.title));
     var pre = h('pre', { tabindex: opts.onLineClick ? null : '0', 'aria-label': (opts.title || 'Lisp code') });
     var rows = lines.map(function (ln, i) {
       var row = h(opts.onLineClick ? 'button.ln.ln-btn' : 'span.ln', opts.onLineClick ? { type: 'button', 'data-line': i + 1, on: { click: function () { opts.onLineClick(i + 1, row); } } } : { 'data-line': i + 1 });
@@ -37,7 +49,9 @@
       return row;
     });
     wrap.appendChild(pre);
-    container.appendChild(wrap);
+    // collapsed: reference code that nothing highlights stays folded until asked for.
+    if (opts.collapsed) { var det = h('details.code-fold', null, h('summary', null, 'Show the Lisp: ' + (opts.title || 'code'))); det.appendChild(wrap); container.appendChild(det); }
+    else container.appendChild(wrap);
     var current = null;
     return {
       el: wrap,

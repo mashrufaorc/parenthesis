@@ -535,3 +535,9 @@ button.hcell { cursor: pointer; }
 .hcell.is-ok, .hcell.is-done { border-color: var(--ok); border-width: 3px; }
 .hcell.is-bad { border-color: var(--bad); border-width: 3px; border-style: dotted; }
 .hcell.is-out { opacity: .55; background: repeating-linear-gradient(45deg, var(--cell), var(--cell) 5px, var(--panel-2) 5px, var(--panel-2) 10px); }
+
+/* Reference Lisp folded away until asked for */
+.code-fold { margin: 10px 0; }
+.code-fold > summary { cursor: pointer; font: 600 13px var(--mono); color: var(--muted); padding: 6px 0; }
+.code-fold > summary:hover { color: var(--accent); }
+.code-fold[open] > summary { margin-bottom: 4px; }

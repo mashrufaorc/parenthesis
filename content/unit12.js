@@ -69,7 +69,7 @@
   ];
 
   var templates = {
-    buildPrompt: 'Insert **{k}**. At node **{at}**: go left or right?',
+    buildPrompt: '**{k}** at node **{at}**: left or right?',
     buildWhy: '{k} {rel} {at}, so go **{dir}**.',
     buildDone: '{k} goes in as the {side} child of {parent}. Height is now {h}.',
     walk: {
