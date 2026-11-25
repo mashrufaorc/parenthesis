@@ -3,6 +3,8 @@
 A browser game that teaches data structures by letting you *play* each algorithm.
 Unofficial study aid based on data structures lecture materials.
 
+**Play it online: https://parenthesis-labs.vercel.app**
+
 ![The map: fifteen lab rooms, one per unit](docs/screenshots/map.jpg)
 
 <table>
