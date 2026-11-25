@@ -522,3 +522,16 @@ button.slot:hover { border-color: var(--accent); }
   .watch-controls { top: 92px; }
   .speed input { width: 70px; }
 }
+
+/* ---------- Unit 14: heap as an array (twin of the tree view) ---------- */
+.heapview { margin: 8px 0; }
+.hcells { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
+.hcell { position: relative; display: inline-flex; flex-direction: column; align-items: center; min-width: 40px; padding: 4px 4px 2px; border: 1.5px solid var(--cell-line); border-radius: 8px; background: var(--cell); color: var(--cell-ink); font: 700 14px var(--mono); }
+button.hcell { cursor: pointer; }
+.hcell .hi { font: 10.5px var(--mono); color: var(--muted); }
+.hcell .hb { position: absolute; top: -9px; right: -4px; font: 700 11px var(--mono); color: var(--m-best); background: var(--bg); padding: 0 2px; border-radius: 4px; }
+.hcell.is-active { border-color: var(--cmp); border-width: 3px; border-style: dashed; }
+.hcell.is-hit { border-color: var(--swap); border-width: 3px; }
+.hcell.is-ok, .hcell.is-done { border-color: var(--ok); border-width: 3px; }
+.hcell.is-bad { border-color: var(--bad); border-width: 3px; border-style: dotted; }
+.hcell.is-out { opacity: .55; background: repeating-linear-gradient(45deg, var(--cell), var(--cell) 5px, var(--panel-2) 5px, var(--panel-2) 10px); }

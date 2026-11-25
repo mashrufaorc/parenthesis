@@ -7,7 +7,7 @@ Unofficial study aid based on data structures lecture materials.
 
 Open `index.html` in any modern browser. No server, no build step, no network: it works offline from disk.
 
-Twelve lab rooms (Units 0–11) unlock in course order; the **placement quiz** skips ahead, and
+Fifteen lab rooms (Units 0–14) unlock in course order; the **placement quiz** skips ahead, and
 **Settings → Unlock every room** opens everything for studying a specific lecture. Cross-unit modes:
 **Review Room** (Leitner boxes of the concepts you slipped on), **Exam Mode** (timed random mix),
 **Pick the Right Structure**, **Cheat Sheet** and **Mastery**.
@@ -26,6 +26,9 @@ Twelve lab rooms (Units 0–11) unlock in course order; the **placement quiz** s
 | 9 Hashing | Hash Hotel | Hash Hotel (+ cuckoo bonus), Tombstone Trap, Collision Lab |
 | 10 Hash tables in Lisp | The Key Vault | Code Detective, The NIL Trap (+ EQL vs EQUAL), Resize Puzzle |
 | 11 Trees | The Greenhouse | Traversal Trail, Terminology Tagging, Build the Parse Tree, Tree to Lists |
+| 12 Binary search trees | The Signpost Maze | BST Builder, Search & Walk, Hibbard Deletion |
+| 13 Splay trees | The Spinning Gallery | Rotation Lab, Splay It, Hot Keys |
+| 14 Heaps and heapsort | The Triage Tower | Index Map, Swim Up, Sink Down, Heapify & Heapsort |
 
 ## Test
 

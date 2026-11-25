@@ -21,7 +21,10 @@
     { id: 8, title: 'Stacks, queues, sets', room: 'The Loading Bay', topic: 'Topic 8', icon: '🥞', built: true },
     { id: 9, title: 'Hashing', room: 'Hash Hotel', topic: 'Topic 9', icon: '#', built: true },
     { id: 10, title: 'Hash tables in Lisp', room: 'The Key Vault', topic: 'Topic 10', icon: '🗝', built: true },
-    { id: 11, title: 'Trees', room: 'The Greenhouse', topic: 'Topic 11', icon: '🌳', built: true }
+    { id: 11, title: 'Trees', room: 'The Greenhouse', topic: 'Topic 11', icon: '🌳', built: true },
+    { id: 12, title: 'Binary search trees', room: 'The Signpost Maze', topic: 'Topic 12', icon: '🌲', built: true },
+    { id: 13, title: 'Splay trees', room: 'The Spinning Gallery', topic: 'Topic 13', icon: '🌀', built: true },
+    { id: 14, title: 'Heaps and heapsort', room: 'The Triage Tower', topic: 'Topic 14', icon: '⛰', built: true }
   ];
 
   /* Shared glossary: lecture wording, shown at a term's first use. */

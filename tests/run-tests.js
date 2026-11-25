@@ -14,7 +14,7 @@ function makeCtx() {
   ctx.globalThis = ctx;
   vm.createContext(ctx);
   var files = ['engine/core.js', 'engine/search.js', 'engine/sorts.js', 'engine/referee.js', 'engine/bigo.js', 'engine/lisp.js',
-   'engine/hashing.js', 'engine/sorts2.js', 'engine/lists.js', 'engine/stacks.js', 'engine/trees.js', 'engine/choose.js', 'state/store.js', 'content/units.js'];
+   'engine/hashing.js', 'engine/sorts2.js', 'engine/lists.js', 'engine/stacks.js', 'engine/trees.js', 'engine/choose.js', 'engine/bst.js', 'engine/heap.js', 'state/store.js', 'content/units.js'];
   fs.readdirSync(path.join(ROOT, 'content')).filter(function (f) { return /^unit\d+\.js$/.test(f); }).forEach(function (f) { files.push('content/' + f); });
   files.forEach(function (f) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
@@ -412,6 +412,66 @@ var CHs = E.choose, u0 = ctx.CQ.content.unitData[0];
 var expectBest = { drive: ['list', 'ring'], prepend: ['list'], lookup: ['hash'], pixels: ['array'], undo: ['array', 'list'], spell: ['hash'], phone: ['sorted'], org: ['tree'], playlist: ['list'],
   brackets: ['list'], bfs: ['ring'], cache: ['hash'], leaderboard: ['sorted'], filesystem: ['tree'] };
 u0.scenarios.concat(u0.crossScenarios).forEach(function (sc) { eq(CHs.rank(sc.ops, sc.n, sc.offer).best.sort(), expectBest[sc.id].sort(), 'scenario ' + sc.id + ' best structure'); });
+
+section('BSTs and splay trees (engine/bst.js) vs the lecture Lisp');
+var Bt = E.bst;
+function lispUnit(n) { return fs.readFileSync(path.join(ROOT, 'lisp', 'unit' + n + '.lisp'), 'utf8'); }
+function lispRun(n, form) { return new E.lisp.Interp().repl(lispUnit(n) + '\n' + form); }
+var lec = [50, 30, 70, 20, 40, 60, 80];
+eq(Bt.inorder(Bt.build(lec)), [20, 30, 40, 50, 60, 70, 80], 'in-order of the lecture tree is sorted');
+eq([Bt.height(Bt.build(lec)), Bt.height(Bt.build([20, 30, 40, 50, 60, 70, 80]))], [2, 6], 'balanced height 2, degenerate height 6');
+eq(Bt.search(Bt.build(lec), 60), { found: true, path: [50, 70, 60], comparisons: 3 }, 'search 60: h + 1 comparisons');
+eq(Bt.search(Bt.build([50, 30, 70]), 65).found, false, 'search miss');
+var rmv = Bt.remove(Bt.build([50, 30, 70, 20, 40, 60, 80, 65]), 50);
+eq([rmv.case, rmv.successor, rmv.root.key, Bt.inorder(rmv.root)], [2, 60, 60, [20, 30, 40, 60, 65, 70, 80]], 'Hibbard: delete the root, successor 60 moves in');
+eq([Bt.remove(Bt.build(lec), 20).case, Bt.remove(Bt.build([50, 30, 70, 20]), 30).case], [0, 1], 'Hibbard cases 0 and 1');
+// Engine vs interpreter on random trees: insertion shape, heights, min/max, deletions.
+for (var bt = 0; bt < 25; bt++) {
+  var r9 = E.rng(500 + bt), ks = [], used9 = {};
+  while (ks.length < 9) { var kk = E.randInt(r9, 1, 60); if (!used9[kk]) { used9[kk] = 1; ks.push(kk); } }
+  var tr9 = Bt.build(ks), lst = '(' + ks.join(' ') + ')';
+  eq(lispRun(12, "(list (bst-height (build-bst '" + lst + ")) (bst-min (build-bst '" + lst + ")) (bst-max (build-bst '" + lst + ")))"), '(' + [Bt.height(tr9), Bt.minPath(tr9).pop(), Bt.maxPath(tr9).pop()].join(' ') + ')', 'BST height/min/max match the Lisp for ' + lst);
+  var dk = ks[E.randInt(r9, 0, 8)], afterDel = Bt.remove(tr9, dk).root;
+  eq(lispRun(12, "(let ((bt (build-bst '" + lst + "))) (setf bt (bst-delete bt " + dk + ")) (list (key bt) (bst-height bt)))"), '(' + afterDel.key + ' ' + Bt.height(afterDel) + ')', 'BST-DELETE ' + dk + ' matches the Lisp (root, height) for ' + lst);
+  var sk = ks[E.randInt(r9, 0, 8)];
+  eq(lispRun(13, "(defvar v (build-tree '" + lst + "))\n(setf v (st-search " + sk + " v))"), Bt.bracket(Bt.splay(tr9, sk).root), 'splay ' + sk + ' matches ST-SEARCH for ' + lst);
+  var nonroot = ks.filter(function (x) { return x !== tr9.key; }), rk = nonroot[E.randInt(r9, 0, nonroot.length - 1)], rot = Bt.rotateUp(tr9, rk);
+  ok(JSON.stringify(Bt.inorder(rot.root)) === JSON.stringify(Bt.inorder(tr9)), 'a rotation keeps in-order (' + rk + ' in ' + lst + ')');
+}
+var spv = Bt.splay(Bt.build([9, 6, 10, 3, 8, 1, 4, 7]), 7);
+eq([spv.chain, spv.frames.slice(1).map(function (f) { return f.kind; })], [[7, 8, 6, 9], ['LT', 'RT', 'LT']], 'lecture splay of 7: chain 7 8 6 9, rotations LT RT LT');
+eq(Bt.bracket(spv.root), '[7-[6-[3-[1--]-[4--]]-]-[9-[8--]-[10--]]]', 'lecture splay of 7 prints like SBCL');
+
+section('Heaps (engine/heap.js) vs the lecture Lisp');
+var Hp = E.heap;
+eq([Hp.parent(4), Hp.left(1), Hp.right(1), Hp.parent(0)], [1, 3, 4, -1], 'HPARENT / HLT / HRT');
+eq(Hp.buildByPush([11, 19, 9, 20], Hp.cmp.max).vec, [20, 19, 9, 11], 'four pushes (lecture)');
+var pp = Hp.pop([20, 19, 18, 7, 11, 5], Hp.cmp.max);
+eq([pp.value, pp.vec], [20, [19, 11, 18, 7, 5]], 'HEAP-POP (lecture)');
+eq(Hp.heapify([10, 5, 2, 6, 12, 15, 1, 9, 7, 8], Hp.cmp.max).vec, [15, 12, 10, 9, 8, 2, 1, 6, 7, 5], 'HEAPIFY (lecture)');
+eq(Hp.heapify([10, 5, 2, 6, 12, 15, 1, 9, 7, 8], Hp.cmp.max).calls.map(function (c) { return c.index; }), [4, 3, 2, 1, 0], 'HEAPIFY sinks 4, 3, 2, 1, 0');
+for (var ht = 0; ht < 25; ht++) {
+  var hv = E.makeInput(ht % 5 === 0 ? 'dupes' : 'random', 6 + ht % 9, 900 + ht), lv = '(vector ' + hv.join(' ') + ')';
+  ['max', 'min'].forEach(function (cn) {
+    var cs = cn === 'max' ? "#'>" : "#'<";
+    var hf = Hp.heapify(hv, Hp.cmp[cn]);
+    ok(Hp.isHeap(hf.vec, Hp.cmp[cn]), 'heapify gives a ' + cn + ' heap for ' + hv.join(' '));
+    eq(lispRun(14, '(let ((v ' + lv + ')) (heapify v ' + cs + ') v)'), '#(' + hf.vec.join(' ') + ')', 'HEAPIFY ' + cs + ' matches the Lisp for ' + hv.join(' '));
+    var bp = Hp.buildByPush(hv, Hp.cmp[cn]);
+    eq(lispRun(14, "(let ((h (make-array 0 :adjustable t :fill-pointer 0))) (dolist (x '(" + hv.join(' ') + ')) (heap-push x h ' + cs + ')) h)'), '#(' + bp.vec.join(' ') + ')', 'n pushes ' + cs + ' match the Lisp');
+    var po = Hp.pop(hf.vec, Hp.cmp[cn]);
+    eq(lispRun(14, "(let ((a (make-array 0 :adjustable t :fill-pointer 0))) (dolist (i '(" + hf.vec.join(' ') + ')) (vector-push-extend i a)) (list (heap-pop a ' + cs + ') a))'), '(' + po.value + ' #(' + po.vec.join(' ') + '))', 'HEAP-POP ' + cs + ' matches the Lisp');
+  });
+  var hs = finalValues(E.runSort('heapsort', hv));
+  eq(hs, hv.slice().sort(function (a, b) { return a - b; }), 'heapsort sorts ' + hv.join(' '));
+  eq(lispRun(14, '(heapsort ' + lv + " #'>)"), '#(' + hs.join(' ') + ')', 'HEAPSORT matches the Lisp');
+}
+eq(finalValues(E.runSort('heapsort', [3, 1, 4, 1, 5], function (a, b) { return a.v < b.v; })), [5, 4, 3, 1, 1], "heapsort with #'< sorts descending");
+var hsT = E.runSort('heapsort', [9, 6, 10, 7, 8]);
+eq(E.values(hsT[hsT.length - 1].arr), [6, 7, 8, 9, 10], 'heapsort (lecture example)');
+ok(hsT.every(function (s) { return ctx.CQ.content.unitData[14].lisp.heapsort.anchors[s.at] != null; }), 'every heapsort snapshot maps to a code line');
+eq(finalValues(E.runSort('heapsort', [])), [], 'heapsort on empty');
+eq(finalValues(E.runSort('heapsort', [42])), [42], 'heapsort on one item');
 
 section('State: storage blocked, mastery, adaptive tiers');
 var ctx2 = makeCtx();

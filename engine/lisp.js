@@ -23,6 +23,7 @@
   function Fn(name, params, body, env) { this.name = name; this.params = params; this.body = body; this.env = env; }
   function Builtin(name, f) { this.name = name; this.f = f; }
   function Ratio(n, d) { this.n = n; this.d = d; }
+  function LStream() { this.buf = ''; }   // output stream for FORMAT inside :print-object
   L.Sym = Sym; L.Cons = Cons; L.LStr = LStr; L.Vec = Vec; L.Struct = Struct; L.HashTab = HashTab; L.sym = sym; L.T = T;
 
   L.list = function (arr, tail) { var r = tail === undefined ? NIL : tail; for (var i = arr.length - 1; i >= 0; i--) r = new Cons(arr[i], r); return r; };
@@ -112,6 +113,7 @@
       while (c instanceof Cons) { parts.push(pr(c.car)); c = c.cdr; }
       return '(' + parts.join(' ') + (c !== NIL ? ' . ' + pr(c) : '') + ')';
     }
+    if (x instanceof Struct && x.printer) return x.printer(x);
     if (x instanceof Struct) return '#S(' + x.type + Object.keys(x.slots).map(function (k) { return ' :' + k + ' ' + pr(x.slots[k]); }).join('') + ')';
     if (x instanceof HashTab) return '#<HASH-TABLE :TEST ' + x.test + ' :COUNT ' + x.map.size + '>';
     if (x instanceof Fn || x instanceof Builtin) return '#<FUNCTION ' + (x.name || '(LAMBDA)') + '>';
@@ -336,17 +338,38 @@
     def('print', function (a) { out.push('\n' + L.print(a[0]) + ' '); return a[0]; });
     def('princ', function (a) { out.push(L.princ(a[0])); return a[0]; });
     def('terpri', function () { out.push('\n'); return NIL; });
+    /* FORMAT directives: ~a ~s ~d ~% ~& ~~ and ~@[ ... ~] (print the inside only if the next argument is non-NIL). */
+    function fmt(ctl, args) {
+      var o = '', k = 0;
+      function run(src) {
+        for (var i = 0; i < src.length; i++) {
+          var ch = src[i];
+          if (ch !== '~') { o += ch; continue; }
+          var d = src[++i];
+          if (d === '@' && src[i + 1] === '[') {
+            var close = src.indexOf('~]', i), inner = src.slice(i + 2, close);
+            if (args[k] !== NIL && args[k] !== undefined) run(inner); else k++;
+            i = close + 1; continue;
+          }
+          d = d.toUpperCase();
+          if (d === '%' || d === '&') o += '\n';
+          else if (d === '~') o += '~';
+          else if (d === 'S') o += L.print(args[k++]);
+          else o += L.princ(args[k++]);
+        }
+      }
+      run(ctl);
+      return o;
+    }
     def('format', function (a) {
-      var s = a[1].s, k = 2;
-      var str = s.replace(/~([%&ASDa-z])/gi, function (_, c) {
-        c = c.toUpperCase();
-        if (c === '%' || c === '&') return '\n';
-        var v = a[k++];
-        return c === 'S' ? L.print(v) : L.princ(v);
-      });
+      var str = fmt(a[1].s, a.slice(2));
       if (a[0] === NIL) return new LStr(str);
+      if (a[0] instanceof LStream) { a[0].buf += str; return NIL; }
       out.push(str); return NIL;
     });
+    def('vector-push-extend', function (a) { a[1].items.push(a[0]); return a[1].items.length - 1; });
+    def('vector-pop', function (a) { if (!a[0].items.length) err('There is nothing left to pop.'); return a[0].items.pop(); });
+    def('fill-pointer', function (a) { return a[0].items.length; });
     def('error', function (a) { err(a[0] instanceof LStr ? a[0].s : L.print(a[0])); });
 
     function asFn(x) {
@@ -455,6 +478,7 @@
           case 'AND': { var r = T; for (var a1 = rest; a1 instanceof Cons; a1 = a1.cdr) { r = prim(ev(a1.car, env)); if (!truthy(r)) return NIL; } return r; }
           case 'OR': { for (var o1 = rest; o1 instanceof Cons; o1 = o1.cdr) { var v = prim(ev(o1.car, env)); if (truthy(v)) return v; } return NIL; }
           case 'PROGN': return progn(rest, env);
+          case 'PROG1': { var p1v = ev(rest.car, env); progn(rest.cdr, env); return p1v; }
           case 'LET': case 'LET*': {
             var e2 = new Env(env);
             for (var b = rest.car; b instanceof Cons; b = b.cdr) {
@@ -492,16 +516,22 @@
           case 'DEFSTRUCT': {
             var sname = (rest.car instanceof Cons ? rest.car.car : rest.car).name;
             // Options: (name (:conc-name nil)) makes accessors without the NAME- prefix.
-            var prefix = sname + '-';
+            var prefix = sname + '-', printer = null;
             if (rest.car instanceof Cons) L.toArray(rest.car.cdr).forEach(function (opt) {
               if (opt instanceof Cons && opt.car instanceof Sym && opt.car.name === ':CONC-NAME') prefix = opt.cdr === NIL || opt.cdr.car === NIL ? '' : (opt.cdr.car.name || '');
+              if (opt instanceof Cons && opt.car instanceof Sym && opt.car.name === ':PRINT-OBJECT') {
+                var pfn = asFn(prim(ev(opt.cdr.car, env)));
+                printer = function (obj) { var st = new LStream(); self.apply(pfn, [obj, st]); return st.buf; };
+              }
             });
             var slots = L.toArray(rest.cdr).filter(function (sp) { return !(sp instanceof LStr); }).map(function (sp) { return sp instanceof Cons ? { n: sp.car.name, d: sp.cdr === NIL ? NIL : sp.cdr.car } : { n: sp.name, d: NIL }; });
             structs[sname] = slots;
             fns.set(sym('MAKE-' + sname), new Builtin('MAKE-' + sname, function (a) {
               var o = kw(a, 0), sl = {};
               slots.forEach(function (sp) { sl[sp.n] = o[sp.n] !== undefined ? o[sp.n] : prim(ev(sp.d, global)); });
-              return new Struct(sname, sl);
+              var inst = new Struct(sname, sl);
+              if (printer) inst.printer = printer;
+              return inst;
             }));
             slots.forEach(function (sp) {
               structAccessors[prefix + sp.n] = { slot: sp.n };
@@ -562,12 +592,14 @@
               try { for (var g9 = 0; ; g9++) { progn(rest, env); if (g9 > maxSteps) err('Loop never ends'); } }
               catch (ex5) { if (ex5 instanceof BlockReturn && ex5.name === null) return ex5.value; throw ex5; }
             }
-            if (!(parts[0] instanceof Sym && parts[0].name === 'FOR' && parts[2] instanceof Sym && parts[2].name === 'IN' && parts[4] instanceof Sym && parts[4].name === 'DO')) err('Only (loop for x in list do ...) is supported');
+            if (!(parts[0] instanceof Sym && parts[0].name === 'FOR' && parts[2] instanceof Sym && (parts[2].name === 'IN' || parts[2].name === 'ON') && parts[4] instanceof Sym && parts[4].name === 'DO')) err('Only (loop for x in/on list do ...) is supported');
+            var onMode = parts[2].name === 'ON';
             var lv = parts[1], items = prim(ev(parts[3], env)), e7 = new Env(env);
             try {
               while (items instanceof Cons) {
-                if (lv instanceof Cons) { var vs = L.toArray(items.car); L.toArray(lv).forEach(function (nm4, q4) { e7.vars.set(nm4, q4 < vs.length ? vs[q4] : NIL); }); }
-                else e7.vars.set(lv, items.car);
+                var cur = onMode ? items : items.car;   // ON binds the list and its tails; IN binds the elements
+                if (lv instanceof Cons) { var vs = L.toArray(cur); L.toArray(lv).forEach(function (nm4, q4) { e7.vars.set(nm4, q4 < vs.length ? vs[q4] : NIL); }); }
+                else e7.vars.set(lv, cur);
                 progn(L.list(parts.slice(5)), e7);
                 items = items.cdr;
               }

@@ -25,16 +25,16 @@
       var slot = 0, maxDepth = 0, flat = [];
       (function lay(n, d) {
         n._d = d; maxDepth = Math.max(maxDepth, d);
-        var kids = (n.children || []).filter(function (c) { return !c.hidden; });
+        var kids = (n.children || []).filter(function (c) { return !c.hidden || opts.slots; });   // slots: empty BST links keep their side
         if (!kids.length) { n._x = slot++; }
         else { kids.forEach(function (c) { lay(c, d + 1); }); n._x = (kids[0]._x + kids[kids.length - 1]._x) / 2; }
         flat.push(n);
       })(rootNode, 0);
-      var W = Math.max(slot, 1) * (NW + GX) + GX, H = (maxDepth + 1) * (NH + GY) + 6;
+      var W = Math.max(slot, 1) * (NW + GX) + GX, H = (maxDepth + 1) * (NH + GY) + 16;
       svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
       svg.style.maxWidth = Math.min(W * 1.4, 1000) + 'px';
       function px(n) { return GX + n._x * (NW + GX) + NW / 2; }
-      function py(n) { return 4 + n._d * (NH + GY); }
+      function py(n) { return 14 + n._d * (NH + GY); }   // room for a badge above the root
       var gE = s('g', { class: 'tv-edges' }), gN = s('g', { class: 'tv-nodes' });
       svg.appendChild(gE); svg.appendChild(gN);
       flat.forEach(function (n) {
@@ -45,6 +45,7 @@
         });
       });
       flat.forEach(function (n) {
+        if (n.hidden) return;
         var selectable = !!(opts.onPick && (!opts.selectable || opts.selectable(n)));
         var g = s('g', { class: 'tv-node' + (n.state ? ' is-' + n.state : ''), transform: 'translate(' + (px(n) - NW / 2) + ',' + py(n) + ')', 'data-id': n.id });
         g.appendChild(s('rect', { width: NW, height: NH, rx: 8, class: 'tv-box' }));
