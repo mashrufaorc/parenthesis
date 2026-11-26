@@ -1,7 +1,6 @@
 # Parenthesis
 
-A browser game that teaches data structures by letting you *play* each algorithm.
-Unofficial study aid based on data structures lecture materials.
+A browser game that teaches Data Structures by letting you *play* each algorithm.
 
 **Play it online: https://parenthesis-labs.vercel.app/**
 
