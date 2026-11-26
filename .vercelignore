@@ -1,3 +1,13 @@
-.claude
-tests
-.vercel
+# Upload only what the game needs (an allowlist, so stray local folders never ship).
+/*
+!/index.html
+!/app.js
+!/css
+!/engine
+!/ui
+!/content
+!/state
+!/lisp
+!/docs
+!/README.md
+!/vercel.json
